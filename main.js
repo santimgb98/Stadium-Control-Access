@@ -25,15 +25,15 @@ Menú interactivo donde el usuario pueda:
 const prompt = require("prompt-sync")();
 
 const fs = require("fs");
-const ruta = "./data.json";
+const rute = "./data.json";
 
-const datas = JSON.parse(fs.readFileSync(ruta, "utf8"));
+const datas = JSON.parse(fs.readFileSync(rute, "utf8"));
 
 const max_capacity = datas[0];
 const current_capacity = datas[1];
-const tickets_array = datas[2];
-console.log(max_capacity);
-console.log(current_capacity);
+const user = datas[2];
+const tickets_array = datas[3];
+const seats_array = datas[4];
 
 // Para generar un ticket de 3 dígitos de código, que con 37 opciones esta aproximación tiene poco más de 50k opciones
 const ticket_generator = [
@@ -43,35 +43,37 @@ const ticket_generator = [
 
 
 class stadium_capacity{
-    constructor(name,ticket,seat){
+    constructor(name,ticket,seat,hour){
         this.name = name;
         this.ticket = ticket;
         this.seat = seat;
+        this.hour = hour;
     }
 
-BuyTickets(){
+    // COMPRAR TICKETS
+    BuyTickets(){
 
         console.clear();
         this.name = prompt("Enter name: ");
 
         // Selección de zona del estadio
         console.log("SELECTION STADIUM ZONE: ");
-        console.log("1. VIP zone");
-        console.log("2. North zone");
-        console.log("3. South zone");
-        console.log("4. West zone");
-        console.log("5. East zone");
+            console.log("1. VIP zone");
+            console.log("2. North zone");
+            console.log("3. South zone");
+            console.log("4. West zone");
+            console.log("5. East zone");
         let zone_selection = prompt("Select area you want: ");
 
         while(isNaN(zone_selection)=== true || zone_selection < 1 || zone_selection > 5){
             zone_selection = prompt("Select a valid area please: ");
         }
         switch(zone_selection){
-            case "1":{this.seat = Math.floor(Math.random()*100) + ", on VIP zone";}break;
-            case "2":{this.seat = Math.floor(Math.random()*(20000-100 + 1) + 100) + ", on North zone";}break;
-            case "3":{this.seat = Math.floor(Math.random()*(30000-20000 + 1) + 20000) + ", on South zone";}break;
-            case "4":{this.seat = Math.floor(Math.random()*(40000-30000 + 1) + 30000) + ", on West zone";}break;
-            case "5":{this.seat = Math.floor(Math.random()*(50000-40000 + 1) + 40000) + ", on East zone";}break;
+            case "1":{this.seat = Math.floor(Math.random()*100);}break;
+            case "2":{this.seat = Math.floor(Math.random()*(20000-100 + 1) + 100);}break;
+            case "3":{this.seat = Math.floor(Math.random()*(30000-20000 + 1) + 20000);}break;
+            case "4":{this.seat = Math.floor(Math.random()*(40000-30000 + 1) + 30000);}break;
+            case "5":{this.seat = Math.floor(Math.random()*(50000-40000 + 1) + 40000);}break;
         }
 
         console.clear();
@@ -104,35 +106,171 @@ BuyTickets(){
         while(tickets_array.includes(this.ticket)){
             this.ticket = shuffle(ticket_generator);
         }
+
+        let newUser = {
+            name : this.name,
+            ticket : this.ticket,
+            seat : this.seat
+        };
+    
+        seats_array.push(this.seat)
         tickets_array.push(this.ticket);
-        const pushToJSON = [max_capacity, current_capacity, tickets_array]
+        user.push(newUser);
+
+        const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
         
         // Pushea los datos nuevos del array "tickets_array" al archivo JSON y así queda actualizado
         const dataParse = JSON.stringify(pushToJSON, null, 2);
-        fs.writeFileSync(ruta, dataParse, 'utf8');
-
+        fs.writeFileSync(rute, dataParse, 'utf8');
 
         console.log("Your purchase has been made",(this.name).toUpperCase());
         console.log("Your ticket code is: ",this.ticket);
         console.log("Your seat name is: ",this.seat);
     }
 
+    // VERIFICAR TICKETS
     VerifyTickets(){
 
-        console.clear();
-        this.ticket= prompt("Enter your ticket: ");
-        console.clear();
+        function binarySearch() {
 
-        if(tickets_array.includes(this.ticket)){
-            console.log("Your ticket", this.ticket,"is available");
-        }else{
-            console.log("Your ticket", this.ticket,"isn't available");
+            // Se ordena el array del JSON que contiene los tickets existentes
+            function bubbleSort(items) {
+                let length = items.length;
+                for (let i = 0; i < length; i++) {
+                    for (let j = 0; j < (length - i - 1); j++) {
+                        if (items[j] > items[j + 1]) {
+                            let tmp = items[j];
+                            items[j] = items[j + 1];
+                            items[j + 1] = tmp;
+                        }
+                    }
+                }          
+            }
+            
+            bubbleSort(tickets_array);
+        
+            console.clear();
+            console.log("****************************");
+            let TicketIncome = prompt("Enter your ticket: ");
+            console.clear();
+        
+            // Búsqueda binaria dentro del array
+        
+            let first = 0;    // Límite izquierdo
+            let last = tickets_array.length - 1;   // Límite derecho
+            let position = 0;
+            let found = false;
+        
+            while (found === false && first <= last) {
+        
+                let middle = Math.floor((first + last)/2);
+                if (tickets_array[middle] == TicketIncome) {
+                    found = true;
+                    position = middle;
+                    console.clear();
+                    console.log("****************************");
+                    console.log("Ticket:",TicketIncome,"exists");
+                    
+        
+                } else if (tickets_array[middle] > TicketIncome) {  //if in lower half
+                    last = middle - 1;
+                } else {  //in in upper half
+                    first = middle + 1;
+                }
+            }
+        
+            if (position === 0 && !tickets_array.includes(TicketIncome)){
+                console.log("Ticket not found");
+            }
+        
+            return position;
         }
+        binarySearch();
 
     }
 
+    // REGISTRAR INGRESO
     RegisterIncome(){
 
+        console.clear();
+
+        this.name = prompt("Enter your name: ");
+
+        // Calcular hora de entrada
+        let date = new Date()
+        let minutes = date.getMinutes();
+        let hour = date.getHours();
+
+        this.hour = hour+":"+minutes
+
+        // Calcula la posición del ticket en su array del JSON, y a partir del mismo,
+        // utililiza su posición para en el siguiente paso poner su hora de entrada al estadio
+
+                        function binarySearch() {
+
+                            // Se ordena el array del JSON que contiene los tickets existentes
+                            function bubbleSort(items) {
+                                let length = items.length;
+                                for (let i = 0; i < length; i++) {
+                                    for (let j = 0; j < (length - i - 1); j++) {
+                                        if (items[j] > items[j + 1]) {
+                                            let tmp = items[j];
+                                            items[j] = items[j + 1];
+                                            items[j + 1] = tmp;
+                                        }
+                                    }
+                                }          
+                            }
+                            
+                            bubbleSort(tickets_array);
+                        
+ 
+                            let TicketIncome = prompt("Enter your ticket: ");
+
+                        
+                            // Búsqueda binaria dentro del array
+                        
+                            let first = 0;    // Límite izquierdo
+                            let last = tickets_array.length - 1;   // Límite derecho
+                            let position = 0;
+                            let found = false;
+                        
+                            while (found === false && first <= last) {
+                        
+                                let middle = Math.floor((first + last)/2);
+                                if (tickets_array[middle] == TicketIncome) {
+                                    found = true;
+                                    position = middle;
+                                    console.clear();
+                                    
+                                } else if (tickets_array[middle] > TicketIncome) {  //if in lower half
+                                    last = middle - 1;
+                                } else {  //in in upper half
+                                    first = middle + 1;
+                                }
+                            }
+                        
+                            if (position === 0 && !tickets_array.includes(TicketIncome)){
+                                console.log("Ticket not found");
+                            }
+                        
+                            return position;
+                        }
+                        let position = binarySearch(tickets_array);
+
+        // Sustituye la hora de entrada en blanco del JSON por la adquirida al pasar la barrera
+        user[position].enter_hour = this.hour
+
+        const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
+        const dataParse = JSON.stringify(pushToJSON, null, 2);
+        fs.writeFileSync(rute, dataParse, 'utf8');
+        
+        console.log((this.name).toUpperCase(),"can you enter to stadium");
+        console.log("Your enter hour is", this.hour);
+    }
+
+    ExitToStadium(){
+        
     }
     
     CurrentCapacity(){
@@ -148,7 +286,7 @@ BuyTickets(){
 
 }
 
-let x = new stadium_capacity("Tom","asdfas","32000");
+let x = new stadium_capacity("Tom","asdfas","32000","14:15");
 let z = "y";
 while(z ==="y"){
     

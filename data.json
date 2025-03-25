@@ -1,32 +1,34 @@
 [
   [
-    {
-      "max": 50000
-    }
+    50000
   ],
+  32000,
   [
     {
-      "current": 32000
+      "name": "juan",
+      "ticket": "123",
+      "seat": 31,
+      "enter_hour": "17:52",
+      "exit_hour": ""
+    },
+    {
+      "name": "pepe",
+      "ticket": "234",
+      "seat": 40000,
+      "enter_hour": "",
+      "exit_hour": ""
     }
   ],
   [
     "123",
-    "2zc",
-    "27y",
-    "hi2",
-    "s3q",
-    "f2i",
-    "uiy",
-    "2uj",
-    "2is",
-    "ju3",
-    "tc8",
-    "fyi",
-    "hxd",
-    "jtr",
-    "n73",
-    "yxz",
-    "i4t",
-    "cl0"
+    "234",
+    "cuz",
+    "n1b"
+  ],
+  [
+    31,
+    40000,
+    22415,
+    34701
   ]
 ]
