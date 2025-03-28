@@ -2,33 +2,29 @@
   [
     50000
   ],
-  32000,
+  3,
   [
     {
       "name": "juan",
       "ticket": "123",
       "seat": 31,
       "enter_hour": "17:52",
-      "exit_hour": ""
+      "exit_hour": "18:43"
     },
     {
       "name": "pepe",
       "ticket": "234",
       "seat": 40000,
-      "enter_hour": "",
-      "exit_hour": ""
+      "enter_hour": "18:45",
+      "exit_hour": "18:47"
     }
   ],
   [
     "123",
-    "234",
-    "cuz",
-    "n1b"
+    "234"
   ],
   [
     31,
-    40000,
-    22415,
-    34701
+    40000
   ]
 ]

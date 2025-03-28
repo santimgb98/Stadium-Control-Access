@@ -1,26 +1,3 @@
-// Max capacity: 50.000
-
-// Formato boleto: BOLETO-[ID-ÚNICO]
-
-// Sistema verifica si la persona lleva boleto válido y si no supera el aforo.
-// Al ingresar el codigo el sistema confirmará si la person aestá autorizada a
-// ingresar al estadio y si su entrada es válida(si ingresó previamente o entrada es válida)
-
-
-// Cada persona que entre, el sistema registra hora de entrada, asiento y código de boleto
-
-// Una persona puede salir del estadio, lo que libera el asiento. El sistema debe permitir esta
-// opción para ajustar el aforo
-
-/* INTERFAZ DE LA CONSOLA 
-Menú interactivo donde el usuario pueda:
-- comprar boletos (ingresar los datos de la persona)
-- verificar acceso (ingresar el codigo del  boleto)
-- registrar ingreso (confirmar el acceso y liberar el asiento cuandos se salga)
-- ver el estado del aforo (ver cuantas personas están dentro del estadio en tiempo real)*/
-
-// REQUISITOS
-/* Estructura de datos JSON*/
 
 const prompt = require("prompt-sync")();
 
@@ -43,17 +20,25 @@ const ticket_generator = [
 
 
 class stadium_capacity{
-    constructor(name,ticket,seat,hour){
+    constructor(name,ticket,seat,hour,enter_hour,exit_hour){
         this.name = name;
         this.ticket = ticket;
         this.seat = seat;
         this.hour = hour;
+        this.enter_hour = enter_hour;
+        this.exit_hour = exit_hour;
     }
 
     // COMPRAR TICKETS
     BuyTickets(){
 
         console.clear();
+
+        // Si el estadio llegó a su capacidad máxima (50.000 personas), no deja comprar más tickets
+        if (user.length == max_capacity){
+            console.log("The stadium is full");
+        }else{
+        
         this.name = prompt("Enter name: ");
 
         // Selección de zona del estadio
@@ -110,7 +95,9 @@ class stadium_capacity{
         let newUser = {
             name : this.name,
             ticket : this.ticket,
-            seat : this.seat
+            seat : this.seat,
+            enter_hour : "",
+            exit_hour : ""
         };
     
         seats_array.push(this.seat)
@@ -119,7 +106,6 @@ class stadium_capacity{
 
         const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
         
-        // Pushea los datos nuevos del array "tickets_array" al archivo JSON y así queda actualizado
         const dataParse = JSON.stringify(pushToJSON, null, 2);
         fs.writeFileSync(rute, dataParse, 'utf8');
 
@@ -127,6 +113,7 @@ class stadium_capacity{
         console.log("Your ticket code is: ",this.ticket);
         console.log("Your seat name is: ",this.seat);
     }
+}
 
     // VERIFICAR TICKETS
     VerifyTickets(){
@@ -226,7 +213,9 @@ class stadium_capacity{
                         
  
                             let TicketIncome = prompt("Enter your ticket: ");
-
+                            while(!tickets_array.includes(TicketIncome)){
+                                TicketIncome = prompt("Enter a valid ticket: ");
+                            }
                         
                             // Búsqueda binaria dentro del array
                         
@@ -261,23 +250,122 @@ class stadium_capacity{
         // Sustituye la hora de entrada en blanco del JSON por la adquirida al pasar la barrera
         user[position].enter_hour = this.hour
 
-        const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
-        const dataParse = JSON.stringify(pushToJSON, null, 2);
-        fs.writeFileSync(rute, dataParse, 'utf8');
-        
-        console.log((this.name).toUpperCase(),"can you enter to stadium");
-        console.log("Your enter hour is", this.hour);
+        if(user[position].enter_hour == null){
+            console.log("Error, this person has enter yet");
+        }else{
+            const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
+            const dataParse = JSON.stringify(pushToJSON, null, 2);
+            fs.writeFileSync(rute, dataParse, 'utf8');
+            
+            console.log((this.name).toUpperCase(),"can you enter to stadium");
+            console.log("Your enter hour is", this.hour);
+        }
     }
 
-    ExitToStadium(){
+    // REGISTRAR SALIDA
+    RegisterExit(){
+        console.clear();
+
+        this.name = prompt("Enter your name: ");
+
+        // Calcular hora de salida
+        let date = new Date()
+        let minutes = date.getMinutes();
+        let hour = date.getHours();
+
+        this.hour = hour+":"+minutes
+
+        // Calcula la posición del ticket en su array del JSON, y a partir del mismo,
+        // utililiza su posición para en el siguiente paso poner su hora de salida del estadio
+
+                        function binarySearch() {
+
+                            // Se ordena el array del JSON que contiene los tickets existentes
+                            function bubbleSort(items) {
+                                let length = items.length;
+                                for (let i = 0; i < length; i++) {
+                                    for (let j = 0; j < (length - i - 1); j++) {
+                                        if (items[j] > items[j + 1]) {
+                                            let tmp = items[j];
+                                            items[j] = items[j + 1];
+                                            items[j + 1] = tmp;
+                                        }
+                                    }
+                                }          
+                            }
+                            
+                            bubbleSort(tickets_array);
+                        
+ 
+                            let TicketIncome = prompt("Enter your ticket: ");
+                            while(!tickets_array.includes(TicketIncome)){
+                                TicketIncome = prompt("Enter a valid ticket: ");
+                            }
+
+                            // Búsqueda binaria dentro del array
+                        
+                            let first = 0;    // Límite izquierdo
+                            let last = tickets_array.length - 1;   // Límite derecho
+                            let position = 0;
+                            let found = false;
+                        
+                            while (found === false && first <= last) {
+                        
+                                let middle = Math.floor((first + last)/2);
+                                if (tickets_array[middle] == TicketIncome) {
+                                    found = true;
+                                    position = middle;
+                                    console.clear();
+                                    
+                                } else if (tickets_array[middle] > TicketIncome) {  //if in lower half
+                                    last = middle - 1;
+                                } else {  //in in upper half
+                                    first = middle + 1;
+                                }
+                            }
+                        
+                            if (position === 0 && !tickets_array.includes(TicketIncome)){
+                                console.log("Ticket not found");
+                            }
+                        
+                            return position;
+                        }
+                        let position = binarySearch(tickets_array);
+
+        // Sustituye la hora de salida en blanco del JSON por la adquirida al pasar la barrera
+        user[position].exit_hour = this.hour
+        
+        if(user[position].enter_hour == ""){
+            console.log("Error, this person didn't enter to stadium");
+        }else if(user[position].exit_hour == null){
+            console.log("Error, this person has exit yet");
+        }else{
+
+            const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
+            const dataParse = JSON.stringify(pushToJSON, null, 2);
+            fs.writeFileSync(rute, dataParse, 'utf8');
+            
+            console.log((this.name).toUpperCase(),"can you exit to stadium");
+            console.log("Your exit hour is", this.hour);
+        }
         
     }
     
+    // CAPACIDAD ACTUAL
     CurrentCapacity(){
         console.clear();
+
+        let current_capacity = 0 + user.length;
+
+        const pushToJSON = [max_capacity, current_capacity, user, tickets_array, seats_array]
+        
+        const dataParse = JSON.stringify(pushToJSON, null, 2);
+        fs.writeFileSync(rute, dataParse, 'utf8');
+
         console.log("The current capacity is:",current_capacity);
     }
 
+    // SALIR DEL PROGRAMA
     Exit(){
         console.clear();
         process.exit();
@@ -295,13 +383,14 @@ while(z ==="y"){
     console.log("*********************");
     console.log("1. Buy tickets");
     console.log("2. Verify tickets");
-    console.log("3. Register income");
-    console.log("4. Current capacity");
-    console.log("5. Exit");
+    console.log("3. Register income to stadium");
+    console.log("4. Register exit to stadium");
+    console.log("5. Current capacity");
+    console.log("6. Exit");
     console.log("*********************");
     let selection = prompt("Select option: ");
 
-    while(isNaN(selection)=== true || selection < 1 || selection > 5){
+    while(isNaN(selection)=== true || selection < 1 || selection > 6){
         selection = prompt("Select a valid option please: ");
     }
 
@@ -309,7 +398,8 @@ while(z ==="y"){
         case "1":{x.BuyTickets();}break
         case "2":{x.VerifyTickets();}break
         case "3":{x.RegisterIncome();}break
-        case "4":{x.CurrentCapacity();}break
-        case "5":{x.Exit();}break
+        case "4":{x.RegisterExit();}break
+        case "5":{x.CurrentCapacity();}break
+        case "6":{x.Exit();}break
     }
 }
